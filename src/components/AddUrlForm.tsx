@@ -6,7 +6,6 @@ import { useState } from "react";
 export function AddUrlForm() {
   const router = useRouter();
   const [url, setUrl] = useState("");
-  const [label, setLabel] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
@@ -18,7 +17,7 @@ export function AddUrlForm() {
     const res = await fetch("/api/urls", {
       method: "POST",
       headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ url, label: label || undefined }),
+      body: JSON.stringify({ url }),
     });
 
     setSubmitting(false);
@@ -30,7 +29,6 @@ export function AddUrlForm() {
     }
 
     setUrl("");
-    setLabel("");
     router.refresh();
   }
 
@@ -49,21 +47,6 @@ export function AddUrlForm() {
           onChange={(e) => setUrl(e.target.value)}
           style={{
             flex: "1 1 320px",
-            padding: "6px 10px",
-            border: "1px solid var(--border)",
-            borderRadius: 6,
-            background: "transparent",
-            color: "inherit",
-          }}
-        />
-        <input
-          type="text"
-          aria-label="Page label (optional)"
-          placeholder="Page label (optional)"
-          value={label}
-          onChange={(e) => setLabel(e.target.value)}
-          style={{
-            flex: "0 1 240px",
             padding: "6px 10px",
             border: "1px solid var(--border)",
             borderRadius: 6,

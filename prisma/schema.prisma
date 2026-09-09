@@ -33,6 +33,7 @@ model Run {
   completedAt  DateTime?
   fetchTime    String? // raw lhr.fetchTime, display/debugging only
   errorMessage String?
+  version      String? // target site's buildinfo.version at run time, via health-check
 
   perfScore          Int? // 0-100
   accessibilityScore Int? // 0-100

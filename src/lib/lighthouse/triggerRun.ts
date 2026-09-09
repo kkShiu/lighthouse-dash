@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { prisma } from "../db";
 import { runLighthouse } from "./runner";
 import { parseReport } from "./parseReport";
+import { fetchHealthCheck } from "../healthCheck";
 
 /**
  * Executes one lhci run for an existing `pending` run row and updates it to
@@ -23,7 +24,10 @@ export async function executeRun(runId: number, url: string): Promise<void> {
       data: { status: "running" },
     });
 
-    await runLighthouse({ url, outputDir: tempDir });
+    const [, health] = await Promise.all([
+      runLighthouse({ url, outputDir: tempDir }),
+      fetchHealthCheck(url),
+    ]);
     const report = parseReport(tempDir);
 
     await prisma.run.update({
@@ -32,6 +36,7 @@ export async function executeRun(runId: number, url: string): Promise<void> {
         status: "complete",
         completedAt: new Date(),
         fetchTime: report.fetchTime,
+        version: health.version,
         perfScore: report.perfScore,
         accessibilityScore: report.accessibilityScore,
         bestPracticesScore: report.bestPracticesScore,

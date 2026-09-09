@@ -83,6 +83,7 @@ export default async function ComparePage({
           >
             {allRuns.map((r) => (
               <option key={r.id} value={r.id}>
+                {r.version && `${r.version} — `}
                 {new Date(r.triggeredAt).toLocaleString()}
               </option>
             ))}
@@ -97,6 +98,7 @@ export default async function ComparePage({
           >
             {allRuns.map((r) => (
               <option key={r.id} value={r.id}>
+                {r.version && `${r.version} — `}
                 {new Date(r.triggeredAt).toLocaleString()}
               </option>
             ))}

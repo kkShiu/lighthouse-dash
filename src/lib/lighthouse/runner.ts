@@ -8,6 +8,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const LHCI_BIN = path.resolve(__dirname, "../../../node_modules/.bin/lhci");
 
 const MAX_CAPTURED_OUTPUT = 20_000; // cap stderr/stdout tail kept for error_message
+const LIGHTHOUSE_TIMEOUT_MS = 90_000; // stays under the route's maxDuration = 120
 
 export interface RunLighthouseOptions {
   url: string;
@@ -47,12 +48,18 @@ export function runLighthouse({
       cwd: outputDir,
     });
 
+    const timer = setTimeout(() => {
+      child.kill();
+      reject(new Error(`lhci timed out after ${LIGHTHOUSE_TIMEOUT_MS / 1000}s`));
+    }, LIGHTHOUSE_TIMEOUT_MS);
+
     let stderrTail = "";
     child.stderr?.on("data", (chunk: Buffer) => {
       stderrTail = (stderrTail + chunk.toString()).slice(-MAX_CAPTURED_OUTPUT);
     });
 
     child.on("close", (code) => {
+      clearTimeout(timer);
       if (code === 0) {
         resolve({ outputDir });
       } else {
@@ -60,6 +67,9 @@ export function runLighthouse({
       }
     });
 
-    child.on("error", reject);
+    child.on("error", (err) => {
+      clearTimeout(timer);
+      reject(err);
+    });
   });
 }

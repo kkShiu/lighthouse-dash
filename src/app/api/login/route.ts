@@ -1,5 +1,13 @@
 import { NextResponse } from "next/server";
+import { timingSafeEqual } from "node:crypto";
 import { CURRENT_SESSION_COOKIE, setCurrentSession } from "@/lib/authSession";
+
+function safeEqual(a: string, b: string): boolean {
+  const bufA = Buffer.from(a);
+  const bufB = Buffer.from(b);
+  if (bufA.length !== bufB.length) return false;
+  return timingSafeEqual(bufA, bufB);
+}
 
 export async function POST(request: Request) {
   const body = await request.json();
@@ -9,7 +17,7 @@ export async function POST(request: Request) {
   const validUsername = process.env.AUTH_USERNAME;
   const validPassword = process.env.AUTH_PASSWORD;
 
-  if (!validUsername || !validPassword || username !== validUsername || password !== validPassword) {
+  if (!validUsername || !validPassword || username !== validUsername || !safeEqual(password, validPassword)) {
     return NextResponse.json({ error: "invalid credentials" }, { status: 401 });
   }
 

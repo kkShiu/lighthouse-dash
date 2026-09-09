@@ -29,6 +29,16 @@ export async function POST(_req: Request, ctx: RouteContext<"/api/urls/[urlId]/r
     return NextResponse.json({ error: "url not found" }, { status: 404 });
   }
 
+  const inProgress = await prisma.run.findFirst({
+    where: { urlId: url.id, status: { in: ["pending", "running"] } },
+  });
+  if (inProgress) {
+    return NextResponse.json(
+      { error: "a run is already in progress for this url" },
+      { status: 409 },
+    );
+  }
+
   const run = await prisma.run.create({
     data: { urlId: url.id, status: "pending" },
   });

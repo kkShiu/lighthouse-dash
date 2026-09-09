@@ -39,8 +39,9 @@ export function TriggerRunButton({ urlId }: { urlId: number }) {
     const res = await fetch(`/api/urls/${urlId}/runs`, { method: "POST" });
 
     if (!res.ok) {
+      const body = await res.json().catch(() => ({}));
       setStatus("failed");
-      setError("Failed to trigger run");
+      setError(body.error ?? "Failed to trigger run");
       return;
     }
 

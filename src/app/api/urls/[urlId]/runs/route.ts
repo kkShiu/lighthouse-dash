@@ -30,11 +30,11 @@ export async function POST(_req: Request, ctx: RouteContext<"/api/urls/[urlId]/r
   }
 
   const inProgress = await prisma.run.findFirst({
-    where: { urlId: url.id, status: { in: ["pending", "running"] } },
+    where: { status: { in: ["pending", "running"] } },
   });
   if (inProgress) {
     return NextResponse.json(
-      { error: "a run is already in progress for this url" },
+      { error: "a run is already in progress" },
       { status: 409 },
     );
   }

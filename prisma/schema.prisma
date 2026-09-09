@@ -1,0 +1,47 @@
+// Lighthouse Dashboard schema.
+// Scores are stored as integers 0-100 (or null for n/a) across the board —
+// this differs from raw Lighthouse JSON, where category scores are 0-1 floats
+// and audit scores are separately left as 0-1 floats. Both are rescaled on ingest
+// in src/lib/lighthouse/parseReport.ts so every score in this app uses one consistent scale.
+
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Url {
+  id         Int       @id @default(autoincrement())
+  url        String    @unique
+  label      String?
+  createdAt  DateTime  @default(now())
+  archivedAt DateTime?
+  runs       Run[]
+
+  @@map("urls")
+}
+
+model Run {
+  id           Int       @id @default(autoincrement())
+  urlId        Int
+  url          Url       @relation(fields: [urlId], references: [id])
+  status       String // "pending" | "running" | "complete" | "failed"
+  triggeredAt  DateTime  @default(now())
+  completedAt  DateTime?
+  fetchTime    String? // raw lhr.fetchTime, display/debugging only
+  errorMessage String?
+
+  perfScore          Int? // 0-100
+  accessibilityScore Int? // 0-100
+  bestPracticesScore Int? // 0-100
+  seoScore           Int? // 0-100
+  pwaScore           Int? // 0-100, frequently null (lhci PWA category often absent)
+
+  auditsJson String? // JSON-serialized array of { id, title, score (0-100|null), displayValue, description, numericValue, details }
+
+  @@index([urlId, triggeredAt])
+  @@map("runs")
+}

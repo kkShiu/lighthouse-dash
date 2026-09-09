@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+.env*
+dev.db
+dev.db-shm
+dev.db-wal
+.lighthouseci
+src/generated/prisma
+coverage
+*.tsbuildinfo
+.DS_Store

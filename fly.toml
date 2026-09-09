@@ -1,0 +1,34 @@
+app = "lighthouse-dashboard"
+primary_region = "nrt"
+
+[build]
+
+[deploy]
+  release_command = "npx prisma migrate deploy"
+
+[env]
+  CHROME_PATH = "/usr/bin/chromium"
+  LHCI_COLLECT__SETTINGS__CHROME_FLAGS = "--no-sandbox --disable-dev-shm-usage --disable-gpu"
+  DATABASE_URL = "file:/data/prod.db"
+
+[[mounts]]
+  source = "lighthouse_data"
+  destination = "/data"
+
+[http_service]
+  internal_port = 3000
+  force_https = true
+  auto_stop_machines = false
+  auto_start_machines = true
+  min_machines_running = 1
+
+  [[http_service.checks]]
+    interval = "15s"
+    timeout = "5s"
+    grace_period = "10s"
+    method = "GET"
+    path = "/api/health"
+
+[[vm]]
+  size = "shared-cpu-1x"
+  memory = "1024mb"

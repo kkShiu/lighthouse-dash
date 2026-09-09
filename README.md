@@ -29,8 +29,44 @@ To learn more about Next.js, take a look at the following resources:
 
 You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
 
-## Deploy on Vercel
+## Deploy to Fly.io
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+This app **cannot** run on Vercel or any other serverless platform: it needs a persistent, writable filesystem for its SQLite database, and it spawns headless Chrome (via `lhci`) as a real child process, which serverless execution environments don't support. It must run as a long-running Docker container with a persistent volume — this repo is set up for [Fly.io](https://fly.io).
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+### Prerequisites
+
+- [`flyctl`](https://fly.io/docs/flyctl/install/) installed
+- `fly auth login`
+
+### First-time deploy
+
+```bash
+fly apps create lighthouse-dashboard
+fly volumes create lighthouse_data --size 1 --region nrt
+fly secrets set AUTH_USERNAME=<pick a username> AUTH_PASSWORD=<pick a password>
+fly deploy
+```
+
+### Auth
+
+The whole app sits behind a single shared login (`AUTH_USERNAME`/`AUTH_PASSWORD`, set via `fly secrets set` — never commit these to `fly.toml`). There are no per-user accounts.
+
+- **Only the most recently successful login stays valid.** Logging in anywhere immediately invalidates every other active session. This is intentional — treat it as "whoever logged in last has the session."
+- The session is held **in memory**, not the database — every `fly deploy` or machine restart clears it, so everyone has to log back in once afterward.
+- `/api/health` is intentionally left unauthenticated so Fly's health check can keep reaching it without a cookie.
+- There's no rate-limiting on the login endpoint — acceptable for a small internal tool, but worth knowing if you ever expose this more broadly.
+
+`fly.toml` is already configured with:
+- The mounted volume (`/data`) that the SQLite database lives on
+- `CHROME_PATH` and `LHCI_COLLECT__SETTINGS__CHROME_FLAGS` (`--no-sandbox` is required for Chrome to launch as root in a container) — **do not remove these**, `lhci` will fail to launch Chrome without them
+- A `release_command` that runs `prisma migrate deploy` automatically before every new deploy takes traffic
+
+### Constraints — read before touching `fly.toml`
+
+- **Never run `fly scale count >1`.** SQLite (in WAL mode) does not support multiple machines sharing one volume. This app must always run as exactly one machine.
+- Migrations run automatically on every `fly deploy` via `release_command` — you don't need to run them manually.
+- There is no managed database backup here (unlike a hosted Postgres) — the SQLite file lives on the Fly volume alone. Consider periodically downloading a copy (`fly ssh sftp get /data/prod.db`) if you want an off-Fly backup.
+
+### Cost
+
+Fly.io has **no free tier** (removed October 2024) and **no built-in spending cap or budget alert** — billing is pure usage-based. This app's configuration (`shared-cpu-1x`, 1GB RAM, 1GB volume, Tokyo region) runs roughly **$6–10/month**. Recommended: fund your Fly account via prepaid credit rather than an uncapped card, so usage draws down a balance instead of billing indefinitely, and check the Fly dashboard's billing page periodically.

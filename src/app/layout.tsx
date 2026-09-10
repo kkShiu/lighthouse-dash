@@ -1,5 +1,6 @@
 import type { Metadata } from "next";
 import "./globals.css";
+import { LogoutBar } from "@/components/LogoutBar";
 
 export const metadata: Metadata = {
   title: "Lighthouse Dashboard",
@@ -9,7 +10,10 @@ export const metadata: Metadata = {
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
-      <body>{children}</body>
+      <body>
+        <LogoutBar />
+        {children}
+      </body>
     </html>
   );
 }

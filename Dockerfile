@@ -19,6 +19,9 @@ FROM node:22.19.0-slim AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 
+ARG GIT_SHA=unknown
+ENV APP_VERSION=$GIT_SHA
+
 RUN apt-get update -o Acquire::ForceIPv4=true && apt-get install -y --no-install-recommends -o Acquire::ForceIPv4=true \
     chromium fonts-liberation libnss3 libatk1.0-0 libatk-bridge2.0-0 \
     libcups2 libdrm2 libxkbcommon0 libxcomposite1 libxdamage1 \

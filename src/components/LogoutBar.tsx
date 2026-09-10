@@ -3,12 +3,22 @@
 import { usePathname } from "next/navigation";
 import { LogoutButton } from "./LogoutButton";
 
-export function LogoutBar() {
+export function LogoutBar({ version }: { version: string }) {
   const pathname = usePathname();
   if (pathname === "/login") return null;
 
   return (
-    <div style={{ display: "flex", justifyContent: "flex-end", padding: "10px 24px 0" }}>
+    <div
+      style={{
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        padding: "10px 24px 0",
+      }}
+    >
+      <span style={{ fontSize: 12, color: "var(--muted)" }} title="Dashboard build version">
+        {version.slice(0, 12)}
+      </span>
       <LogoutButton />
     </div>
   );

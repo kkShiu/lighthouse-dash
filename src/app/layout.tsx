@@ -11,7 +11,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
       <body>
-        <LogoutBar />
+        <LogoutBar version={process.env.APP_VERSION ?? "dev"} />
         {children}
       </body>
     </html>

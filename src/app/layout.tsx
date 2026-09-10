@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { LogoutBar } from "@/components/LogoutBar";
+import { APP_VERSION } from "@/lib/version";
 
 export const metadata: Metadata = {
   title: "Lighthouse Dashboard",
@@ -11,7 +12,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en">
       <body>
-        <LogoutBar version={process.env.APP_VERSION ?? "dev"} />
+        <LogoutBar version={APP_VERSION} />
         {children}
       </body>
     </html>

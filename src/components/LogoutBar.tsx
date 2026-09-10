@@ -17,7 +17,7 @@ export function LogoutBar({ version }: { version: string }) {
       }}
     >
       <span style={{ fontSize: 12, color: "var(--muted)" }} title="Dashboard build version">
-        {version.slice(0, 12)}
+        v{version}
       </span>
       <LogoutButton />
     </div>

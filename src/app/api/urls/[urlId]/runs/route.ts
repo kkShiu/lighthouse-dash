@@ -6,6 +6,8 @@ import { executeRun } from "@/lib/lighthouse/triggerRun";
 export const dynamic = "force-dynamic";
 export const maxDuration = 120;
 
+const RUN_COOLDOWN_MS = 30_000; // minimum gap between run triggers, app-wide
+
 export async function GET(request: Request, ctx: RouteContext<"/api/urls/[urlId]/runs">) {
   const { urlId } = await ctx.params;
   const { searchParams } = new URL(request.url);
@@ -36,6 +38,14 @@ export async function POST(_req: Request, ctx: RouteContext<"/api/urls/[urlId]/r
     return NextResponse.json(
       { error: "a run is already in progress" },
       { status: 409 },
+    );
+  }
+
+  const lastRun = await prisma.run.findFirst({ orderBy: { triggeredAt: "desc" } });
+  if (lastRun && Date.now() - new Date(lastRun.triggeredAt).getTime() < RUN_COOLDOWN_MS) {
+    return NextResponse.json(
+      { error: "please wait before triggering another run" },
+      { status: 429 },
     );
   }
 

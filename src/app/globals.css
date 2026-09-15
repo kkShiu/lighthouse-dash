@@ -69,3 +69,25 @@ button {
   font: inherit;
   color: inherit;
 }
+
+@keyframes new-version-blink {
+  0%,
+  100% {
+    background-color: #d97706;
+    color: white;
+  }
+  50% {
+    background-color: transparent;
+    color: #d97706;
+  }
+}
+
+.new-version-badge {
+  animation: new-version-blink 1.8s ease-in-out infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .new-version-badge {
+    animation: none;
+  }
+}

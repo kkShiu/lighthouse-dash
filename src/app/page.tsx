@@ -20,7 +20,12 @@ const ENV_SECTIONS: { tier: EnvTier; label: string }[] = [
 ];
 
 type UrlWithLatestRun = Url & { runs: Run[] };
-type RowData = { url: UrlWithLatestRun; envTier: EnvTier; version: string | null };
+type RowData = {
+  url: UrlWithLatestRun;
+  envTier: EnvTier;
+  version: string | null;
+  liveVersion: string | null;
+};
 
 /**
  * Rows are grouped by origin (the parent layer) with each tracked URL's
@@ -65,7 +70,12 @@ export default async function Home() {
   const rows: RowData[] = urls.map((url, i) => ({
     url,
     envTier: healthChecks[i].envTier,
-    version: healthChecks[i].version,
+    // The version shown here is the one recorded on the most recent
+    // Lighthouse run, not a live health-check fetch — the site's deployed
+    // version can move on between runs, but the scores in this row were
+    // captured against the run's version, so they must stay paired.
+    version: url.runs[0]?.version ?? null,
+    liveVersion: healthChecks[i].version,
   }));
 
   return (
@@ -140,7 +150,7 @@ function EnvSection({ label, color, rows }: { label: string; color: string; rows
         <table>
           <colgroup>
             <col style={{ width: 260 }} />
-            <col style={{ width: 110 }} />
+            <col style={{ width: 170 }} />
             {CATEGORY_COLUMNS.map((c) => (
               <col key={c.key} style={{ width: 110 }} />
             ))}
@@ -190,9 +200,10 @@ function OriginGroup({ origin, rows }: { origin: string; rows: RowData[] }) {
           {origin}
         </td>
       </tr>
-      {rows.map(({ url: u, version }) => {
+      {rows.map(({ url: u, version, liveVersion }) => {
         const latest = u.runs[0];
         const { path } = splitUrl(u.url);
+        const isStale = liveVersion != null && version != null && liveVersion !== version;
         return (
           <tr key={u.id}>
             <td title={u.url} style={{ paddingLeft: 28 }}>
@@ -219,7 +230,38 @@ function OriginGroup({ origin, rows }: { origin: string; rows: RowData[] }) {
                 </div>
               )}
             </td>
-            <td style={{ fontSize: 13, color: "var(--muted)" }}>{version ?? "—"}</td>
+            <td
+              style={{
+                fontSize: 13,
+                color: "var(--muted)",
+                whiteSpace: "normal",
+                overflow: "visible",
+                textOverflow: "clip",
+              }}
+            >
+              <div>{version ?? "—"}</div>
+              {isStale && (
+                <Link
+                  href={`/urls/${u.id}`}
+                  className="new-version-badge"
+                  title={`Live site is on ${liveVersion} — last run was against ${version}. Trigger a new run to refresh.`}
+                  style={{
+                    display: "inline-flex",
+                    alignItems: "center",
+                    marginTop: 4,
+                    padding: "1px 6px",
+                    borderRadius: 999,
+                    fontSize: 11,
+                    fontWeight: 700,
+                    color: "white",
+                    background: "#d97706",
+                    whiteSpace: "nowrap",
+                  }}
+                >
+                  {liveVersion} available
+                </Link>
+              )}
+            </td>
             {CATEGORY_COLUMNS.map((c) => (
               <td key={c.key}>
                 <ScoreBadge score={latest ? latest[c.key] : null} />

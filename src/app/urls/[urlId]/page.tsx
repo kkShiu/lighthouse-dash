@@ -54,6 +54,22 @@ export default async function UrlDetailPage({ params }: PageProps<"/urls/[urlId]
       <p style={{ display: "flex", alignItems: "center", gap: 8, fontSize: 13, marginBottom: 16 }}>
         <EnvBadge tier={health.envTier} />
         <span style={{ color: "var(--muted)" }}>Version: {health.version ?? "—"}</span>
+        {health.version != null && runs[0]?.version != null && health.version !== runs[0].version && (
+          <span
+            className="new-version-badge"
+            title={`Live site is on ${health.version} — last run was against ${runs[0].version}. Trigger a new run below to refresh.`}
+            style={{
+              padding: "1px 8px",
+              borderRadius: 999,
+              fontSize: 11,
+              fontWeight: 700,
+              color: "white",
+              background: "#d97706",
+            }}
+          >
+            new version — run needed
+          </span>
+        )}
       </p>
 
       <div style={{ marginBottom: 24, display: "flex", gap: 10, alignItems: "center" }}>

@@ -37,4 +37,4 @@ COPY --from=builder /app/prisma ./prisma
 COPY --from=builder /app/prisma7.config.ts ./prisma7.config.ts
 
 EXPOSE 3000
-CMD ["npx", "next", "start", "-p", "3000", "-H", "0.0.0.0"]
+CMD ["sh", "-c", "npx prisma migrate deploy && exec npx next start -p 3000 -H 0.0.0.0"]

@@ -43,9 +43,13 @@ This app **cannot** run on Vercel or any other serverless platform: it needs a p
 ```bash
 fly apps create lighthouse-dashboard
 fly volumes create lighthouse_data --size 1 --region nrt
-fly secrets set AUTH_USERNAME=<pick a username> AUTH_PASSWORD=<pick a password>
+fly secrets set AUTH_USERNAME=your_username AUTH_PASSWORD=your_strong_password
 fly deploy
+fly status
+fly logs
 ```
+
+Replace the example credentials with your own values. If the app name is already taken, choose another name and update `app` in `fly.toml`. The first deployment creates a new, empty production database on the volume; the local `dev.db` is not included in the image. After deployment, open the app, sign in, add a URL, and trigger one run to verify that Chromium can complete a Lighthouse report.
 
 ### Auth
 
@@ -59,13 +63,13 @@ The whole app sits behind a single shared login (`AUTH_USERNAME`/`AUTH_PASSWORD`
 `fly.toml` is already configured with:
 - The mounted volume (`/data`) that the SQLite database lives on
 - `CHROME_PATH` and `LHCI_COLLECT__SETTINGS__CHROME_FLAGS` (`--no-sandbox` is required for Chrome to launch as root in a container) — **do not remove these**, `lhci` will fail to launch Chrome without them
-- A `release_command` that runs `prisma migrate deploy` automatically before every new deploy takes traffic
+- The Docker startup command runs `prisma migrate deploy` against the mounted database before starting Next.js. Fly release commands run without persistent volumes, so they cannot migrate this SQLite database.
 
 ### Constraints — read before touching `fly.toml`
 
 - **Never run `fly scale count >1`.** SQLite (in WAL mode) does not support multiple machines sharing one volume. This app must always run as exactly one machine.
-- Migrations run automatically on every `fly deploy` via `release_command` — you don't need to run them manually.
-- There is no managed database backup here (unlike a hosted Postgres) — the SQLite file lives on the Fly volume alone. Consider periodically downloading a copy (`fly ssh sftp get /data/prod.db`) if you want an off-Fly backup.
+- Migrations run automatically when the app machine starts, including after each deploy. A failed migration prevents the app from starting.
+- There is no managed database backup here (unlike a hosted Postgres) — the SQLite file lives on the Fly volume alone. Arrange volume snapshots and a consistent off-Fly SQLite backup; copying only `prod.db` while WAL mode is active can miss recent writes.
 
 ### Cost
 

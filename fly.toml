@@ -3,9 +3,6 @@ primary_region = "nrt"
 
 [build]
 
-[deploy]
-  release_command = "npx prisma migrate deploy"
-
 [env]
   CHROME_PATH = "/usr/bin/chromium"
   LHCI_COLLECT__SETTINGS__CHROME_FLAGS = "--no-sandbox --disable-dev-shm-usage --disable-gpu"
